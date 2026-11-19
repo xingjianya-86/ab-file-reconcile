@@ -110,6 +110,37 @@ POST /api/v1/plugins/file-reconcile/check    # 立即跑一轮并返回报告
 | `ab_dir_missing` | 番剧目录整个不存在 | 只报告（多半是 `local_prefix` 配错） |
 | `path_unmapped` | `save_path` 不以 `downloader_prefix` 开头 | 只报告 |
 
+## 访问范围
+
+供维护者审查。本插件**只**做下面这些事：
+
+**网络**
+
+| 目标 | 来源 | 用途 |
+| --- | --- | --- |
+| qBittorrent WebAPI | 地址与账号读自 AutoBangumi 自己的下载器设置（`config/plugins/.../options`，即 `plugins.instances`）；也可在插件配置里显式覆盖 | 读任务与文件列表；执行 `recheck` 与 `add` |
+
+不访问任何第三方站点，不发起到 qB 以外的连接。AB 数据库与下载器地址都来自宿主配置，插件不硬编码任何主机。
+
+**文件**
+
+| 路径 | 读写 | 说明 |
+| --- | --- | --- |
+| `<db_path>`（默认 `/app/data/data.db`） | 只读 | `mode=ro` + `busy_timeout`，不写 |
+| `config/config.json` | 只读 | 取下载器连接参数 |
+| `local_prefix`（下载目录） | 只读 | `stat` / `listdir` / `walk`；容器内以 `:ro` 挂载 |
+| 持久化 | — | 只经 SDK 的 `ctx.kv`（宿主的 `plugin_kv` 表） |
+
+**不做的事**：不删除、不改名、不写入任何媒体文件；不修改 `data.db`；
+不调用 AutoBangumi 的 HTTP API；不读取与本插件无关的配置。
+
+**qB 上执行的写操作**（仅在 `auto_fix` 打开且安全闸门通过时）：
+
+- `POST /api/v2/torrents/recheck` — 让 qB 自己校验并补下缺失文件
+- `POST /api/v2/torrents/add` — 用 `torrent` 表里已记录的种子 URL 重新投递
+
+两者都不会删除 qB 中已有的任务。
+
 ## 安全设计
 
 - 媒体目录以 **`:ro`** 挂载，插件结构上无法写入或删除文件。
