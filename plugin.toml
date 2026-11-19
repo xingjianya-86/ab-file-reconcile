@@ -1,0 +1,11 @@
+[plugin]
+id = "file-reconcile"
+name = "文件与下载任务对账"
+version = "1.0.0"
+sdk = ">=0.6,<1"
+entry = "file_reconcile:FileReconcile"
+description = "定时核对 qBittorrent 任务与 AutoBangumi「已下载」标记是否真的有对应文件；发现缺失可自动触发 qB 校验补下或重新投递种子。"
+authors = ["xingjianya-86"]
+permissions = ["network"]
+extension_points = ["scheduled_task", "api_router"]
+default_enabled = false

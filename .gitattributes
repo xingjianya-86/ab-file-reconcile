@@ -1,0 +1,5 @@
+# 统一 LF：CI 在 Linux 上运行，CRLF 会让 shell/python 出现难以排查的问题
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.ico binary
